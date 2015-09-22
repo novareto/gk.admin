@@ -2,31 +2,29 @@
 
 import datetime
 import transaction
+import zope.schema
+
 from barrel import cooper
-
-from . import SESSION_KEY, i18n as _
-
 from cromlech.dawnlight import DawnlightPublisher, ViewLookup
 from cromlech.i18n.utils import setLanguage
+from cromlech.security import Interaction
 from cromlech.webob import Request
 from dolmen.sqlcontainer import SQLContainer
-
-from uvclight import query_view
-from uvclight.directives import traversable
-from uvclight import setSession, IRootObject
-from uvclight.backends.sql import SQLAlchemySession, create_and_register_engine
-
-from cromlech.security import Interaction
-from ul.auth import require
-
 from sqlalchemy import Column, Text, Integer, DateTime, String
 from sqlalchemy.ext.declarative import declarative_base
-
-import zope.schema
+from ul.auth import require
+from uvc.themes.btwidgets import IBootstrapRequest
+from uvclight import query_view
+from uvclight import setSession, IRootObject
+from uvclight.backends.sql import SQLAlchemySession, create_and_register_engine
+from uvclight.directives import traversable
 from zope.interface import Interface, implementer, alsoProvides
 from zope.location import Location
 from zope.schema.vocabulary import SimpleVocabulary, SimpleTerm
-from uvc.themes.btwidgets import IBootstrapRequest
+from zope.i18nmessageid import MessageFactory
+
+
+_ = MessageFactory("gatekeeper")
 
 
 def query(request, obj, name):
@@ -148,7 +146,7 @@ admins = [
 REALM = "sso.novareto.de"
 
 
-def admin(global_conf, dburl, dbkey, pkey, **kwargs):
+def admin(global_conf, dburl, dbkey, pkey, sessionkey, **kwargs):
 
     engine = create_and_register_engine(dburl, dbkey)
     engine.bind(Admin)
