@@ -146,7 +146,7 @@ admins = [
 REALM = "sso.novareto.de"
 
 
-def admin(global_conf, dburl, dbkey, pkey, sessionkey, **kwargs):
+def admin(global_conf, dburl, dbkey, pkey, session_key, **kwargs):
 
     engine = create_and_register_engine(dburl, dbkey)
     engine.bind(Admin)
@@ -157,7 +157,7 @@ def admin(global_conf, dburl, dbkey, pkey, sessionkey, **kwargs):
 
     @cooper.basicauth(users=admins, realm=REALM)
     def app(environ, start_response):
-        session = environ[SESSION_KEY].session
+        session = environ[session_key].session
         setSession(session)
         setLanguage('de')
         request = Request(environ)
