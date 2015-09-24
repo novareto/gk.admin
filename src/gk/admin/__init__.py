@@ -14,7 +14,7 @@ from sqlalchemy import Column, Text, Integer, DateTime, String
 from sqlalchemy.ext.declarative import declarative_base
 from ul.auth import require
 from uvc.themes.btwidgets import IBootstrapRequest
-from uvclight import query_view
+from uvclight import eval_loader, query_view
 from uvclight import setSession, IRootObject
 from uvclight.backends.sql import SQLAlchemySession, create_and_register_engine
 from uvclight.directives import traversable
@@ -146,7 +146,7 @@ admins = [
 REALM = "sso.novareto.de"
 
 
-def admin(global_conf, dburl, dbkey, pkey, session_key, **kwargs):
+def admin(global_conf, dburl, dbkey, pkey, session_key, layer, **kwargs):
 
     engine = create_and_register_engine(dburl, dbkey)
     engine.bind(Admin)
@@ -154,7 +154,7 @@ def admin(global_conf, dburl, dbkey, pkey, session_key, **kwargs):
 
     root = AdminRoot(pkey, dbkey)
     publisher = DawnlightPublisher(view_lookup=view_lookup)
-
+    
     @cooper.basicauth(users=admins, realm=REALM)
     def app(environ, start_response):
         session = environ[session_key].session
@@ -162,6 +162,8 @@ def admin(global_conf, dburl, dbkey, pkey, session_key, **kwargs):
         setLanguage('de')
         request = Request(environ)
         alsoProvides(request, IBootstrapRequest)
+        skin_layer = eval_loader(layer)
+        alsoProvides(request, skin_layer)
         with Interaction():
             with transaction.manager as tm:
                 with SQLAlchemySession(engine, transaction_manager=tm):
