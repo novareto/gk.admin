@@ -46,4 +46,12 @@ setup(name='gk.admin',
           'zope.location',
           'zope.schema',
         ],
+      entry_points={
+         'paste.app_factory': [
+             'app = gk.admin:admin',
+         ],
+        'paste.filter_app_factory': [
+            'messages = gk.admin:messages_injector',
+        ]
+      }
       )

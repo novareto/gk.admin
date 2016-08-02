@@ -8,6 +8,8 @@ from barrel import cooper
 from cromlech.dawnlight import DawnlightPublisher, ViewLookup
 from cromlech.i18n.utils import setLanguage
 from cromlech.security import Interaction
+from cromlech.sqlalchemy import (
+    SQLAlchemySession, create_engine, create_and_register_engine)
 from cromlech.webob import Request
 from dolmen.sqlcontainer import SQLContainer
 from sqlalchemy import Column, Text, Integer, DateTime, String
@@ -16,12 +18,11 @@ from ul.auth import require
 from uvc.themes.btwidgets import IBootstrapRequest
 from uvclight import eval_loader, query_view
 from uvclight import setSession, IRootObject
-from uvclight.backends.sql import SQLAlchemySession, create_and_register_engine
 from uvclight.directives import traversable
+from zope.i18nmessageid import MessageFactory
 from zope.interface import Interface, implementer, alsoProvides
 from zope.location import Location
 from zope.schema.vocabulary import SimpleVocabulary, SimpleTerm
-from zope.i18nmessageid import MessageFactory
 
 
 _ = MessageFactory("gatekeeper")
@@ -146,7 +147,7 @@ admins = [
 REALM = "sso.novareto.de"
 
 
-def admin(global_conf, dburl, dbkey, pkey, session_key, layer, **kwargs):
+def admin(global_conf, dburl, dbkey, pkey, session_key, layer=None, **kwargs):
 
     engine = create_and_register_engine(dburl, dbkey)
     engine.bind(Admin)
@@ -162,8 +163,9 @@ def admin(global_conf, dburl, dbkey, pkey, session_key, layer, **kwargs):
         setLanguage('de')
         request = Request(environ)
         alsoProvides(request, IBootstrapRequest)
-        skin_layer = eval_loader(layer)
-        alsoProvides(request, skin_layer)
+        if layer:
+            skin_layer = eval_loader(layer)
+            alsoProvides(request, skin_layer)
         with Interaction():
             with transaction.manager as tm:
                 with SQLAlchemySession(engine, transaction_manager=tm):
@@ -173,3 +175,18 @@ def admin(global_conf, dburl, dbkey, pkey, session_key, layer, **kwargs):
         setSession()
         return result
     return app
+
+
+def messages_injector(app, global_conf, dburl, envkey):
+    engine = create_engine(dburl, 'messages')
+    Admin.metadata.create_all(engine.engine)
+
+    def message_aware(environ, start_response):
+        with SQLAlchemySession(engine) as session:
+            messages = get_valid_messages(session)
+        book = environ.setdefault(envkey, {})
+        admin = book.setdefault('admin', [])
+        admin.extend(messages)
+        return app(environ, start_response)
+
+    return message_aware
