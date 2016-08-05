@@ -9,7 +9,7 @@ test_requires = [
     ]
 
 setup(name='gk.admin',
-      version='0.2.dev0',
+      version='0.2',
       description="Admin system for Gatekeeper",
       long_description = long_description,
       classifiers=['Environment :: Web Environment',
