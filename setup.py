@@ -9,7 +9,7 @@ test_requires = [
     ]
 
 setup(name='gk.admin',
-      version='1.0',
+      version='0.1',
       description="Admin system for Gatekeeper",
       long_description = long_description,
       classifiers=['Environment :: Web Environment',
@@ -45,6 +45,7 @@ setup(name='gk.admin',
           'zope.interface',
           'zope.location',
           'zope.schema',
+          'setuptools',
         ],
       entry_points={
          'paste.app_factory': [
